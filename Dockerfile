@@ -32,7 +32,7 @@ RUN \
   unzip openig-war/target/wrenig-$(cat /build/version.txt).war -d /build/wrenig
 
 
-FROM tomcat:9-jdk17-temurin
+FROM tomcat:10-jdk17-temurin
 
 # Set environment variables
 ENV \

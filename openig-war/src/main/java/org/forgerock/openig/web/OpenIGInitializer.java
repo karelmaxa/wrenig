@@ -27,10 +27,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
 
-import javax.servlet.ServletContainerInitializer;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRegistration;
+import jakarta.servlet.ServletContainerInitializer;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRegistration;
 
 import org.forgerock.http.servlet.HttpFrameworkServlet;
 import org.forgerock.json.JsonValue;
