@@ -12,15 +12,23 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openig.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.EnumSet;
+
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.SessionTrackingMode;
 
 import org.forgerock.openig.config.Environment;
 import org.forgerock.openig.config.env.DefaultEnvironment;
@@ -36,6 +44,16 @@ public class OpenIGInitializerTest {
 
         URL url = initializer.selectConfigurationUrl("config.json");
         assertThat(url).isEqualTo(OpenIGInitializer.class.getResource("default-config.json"));
+    }
+
+    @Test
+    public void shouldTrackSessionsWithCookiesOnly() throws Exception {
+        Environment env = new DefaultEnvironment(getRelative(getClass(), "doesnt-exist"));
+        ServletContext context = mock(ServletContext.class, RETURNS_DEEP_STUBS);
+
+        new OpenIGInitializer(env).onStartup(null, context);
+
+        verify(context).setSessionTrackingModes(EnumSet.of(SessionTrackingMode.COOKIE));
     }
 
     // Copied from Files (in openig-core/src/test/java)

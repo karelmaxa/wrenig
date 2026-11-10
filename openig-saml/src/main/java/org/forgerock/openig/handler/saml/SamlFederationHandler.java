@@ -12,7 +12,7 @@
  * information: "Portions Copyright [year] [name of copyright owner]".
  *
  * Copyright 2014-2016 ForgeRock AS.
- * Portions Copyright 2024 Wren Security.
+ * Portions Copyright 2024-2026 Wren Security.
  */
 package org.forgerock.openig.handler.saml;
 
@@ -215,6 +215,9 @@ public class SamlFederationHandler implements Handler {
      * <p>
      * The assertion is validated, attributes are retrieved from and set in the HttpSession where downstream filters
      * can access them and pass them on to the target application.
+     * <p>
+     * Once the assertion is validated, the session is reset (see {@link #resetSession(Session, HttpServletRequest)})
+     * before the attributes are stored.
      */
     private Response serviceAssertionConsumer(Session session,
                                               HttpServletRequest request,
@@ -223,6 +226,7 @@ public class SamlFederationHandler implements Handler {
                                                                                    SAML2Exception,
                                                                                    SessionException {
         Map<?, ?> map = SPACSUtils.processResponseForFedlet(request, response, response.getWriter());
+        resetSession(session, request);
         addAttributesToSession(session, map);
         /*
          * Redirect back to the original target application's login page and let the filters take over. If the relayURI
@@ -232,6 +236,19 @@ public class SamlFederationHandler implements Handler {
         String relayURI = (String) map.get(SAML2Constants.RELAY_STATE);
         String uri = isRelayURIProvided(relayURI) ? relayURI : redirectURI;
         return sendRedirect(uri);
+    }
+
+    /**
+     * Resets the session after a successful SAML login.
+     * <p>
+     * All existing attributes are removed, so that no state from before the login survives. If a servlet session exists,
+     * its identifier is changed to prevent session fixation.
+     */
+    private static void resetSession(final Session session, final HttpServletRequest request) {
+        session.clear();
+        if (request.getSession(false) != null) {
+            request.changeSessionId();
+        }
     }
 
     private boolean isRelayURIProvided(String relayURI) {

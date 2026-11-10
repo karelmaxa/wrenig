@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
- * Portions Copyright 2025 Wren Security.
+ * Portions Copyright 2025-2026 Wren Security.
  */
 
 package org.forgerock.openig.web;
@@ -26,12 +26,14 @@ import static org.forgerock.openig.util.JsonValues.evaluated;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.EnumSet;
 import java.util.Set;
 
 import jakarta.servlet.ServletContainerInitializer;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
+import jakarta.servlet.SessionTrackingMode;
 
 import org.forgerock.http.servlet.HttpFrameworkServlet;
 import org.forgerock.json.JsonValue;
@@ -80,6 +82,9 @@ public class OpenIGInitializer implements ServletContainerInitializer {
             setupLogSystem();
 
             logger.info("OpenIG base directory : {}", environment.getBaseDirectory());
+
+            // Never track sessions with URL rewriting (';jsessionid=' in URLs can leak, or be used for session fixation)
+            context.setSessionTrackingModes(EnumSet.of(SessionTrackingMode.COOKIE));
 
             URL adminConfigURL = selectConfigurationUrl("admin.json");
             JsonValue adminConfig = JsonValues.readJson(adminConfigURL);
