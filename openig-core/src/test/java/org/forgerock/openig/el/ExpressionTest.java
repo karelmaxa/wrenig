@@ -13,6 +13,7 @@
  *
  * Copyright 2010-2011 ApexIdentity Inc.
  * Portions Copyright 2011-2016 ForgeRock AS.
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openig.el;
@@ -204,7 +205,7 @@ public class ExpressionTest {
         assertThat(stringExpr.eval(bindings)).isEqualTo("SESSION=value; path=/");
 
         stringExpr = Expression.valueOf("${response.headers['Set-Cookie'][0]}", String.class);
-        assertThat(stringExpr.eval(bindings)).isEqualTo("MyCookie=example; Path=/");
+        assertThat(stringExpr.eval(bindings)).isEqualTo("MyCookie=example; path=/");
     }
 
     @Test
