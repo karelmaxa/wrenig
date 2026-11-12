@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2014-2016 ForgeRock AS.
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openig.jwt;
@@ -46,10 +47,13 @@ import org.forgerock.http.protocol.Request;
 import org.forgerock.http.protocol.Response;
 import org.forgerock.http.protocol.Status;
 import org.forgerock.json.jose.builders.JwtBuilderFactory;
+import org.forgerock.json.jose.jwe.EncryptedJwt;
+import org.forgerock.json.jose.jwe.JweAlgorithm;
 import org.forgerock.json.jose.jws.EncryptedThenSignedJwt;
 import org.forgerock.json.jose.jws.handlers.HmacSigningHandler;
 import org.forgerock.json.jose.jws.handlers.SigningHandler;
 import org.forgerock.json.jose.jwt.JwtClaimsSet;
+import org.forgerock.util.encode.Base64url;
 import org.forgerock.util.time.Duration;
 import org.forgerock.util.time.TimeService;
 import org.testng.annotations.BeforeMethod;
@@ -60,21 +64,22 @@ import org.testng.annotations.Test;
 public class JwtCookieSessionTest {
 
     // @Checkstyle:off
-    private static final BigInteger MODULUS = new BigInteger("8791241646273606363530743138466682857710006665746288923335499993647975314172150182688142208337957780959253668641058299308924577038067798942355217080985221");
-    private static final BigInteger PRV_EXP = new BigInteger("5285047066871138702057581959998914169261891032908708627042668481159292909395626068592006158226313005725007395275807957072135194469637529567961288974510261");
+    private static final BigInteger MODULUS = new BigInteger("25366522287061027145766827208458226830629591039641370484437237573482733225106980495329907410285723302359484019557948613507747774723701128512068985684077323164176142978871054978891228081911262380334592655484800696041293342250337107268538720062625968842947369102299463881897573053010426083360219898591908827384817839211514871012961744298396230437453764807628028579040290526455130578280054602043090696268994760427273443417446012796796868567107859046601993793261679739290641167736681316516030417256562248275149198563312970970756650273666899105644010406940086695646844468390081394359481011085005238347581853702391685885273");
+    private static final BigInteger PRV_EXP = new BigInteger("1410337146703062661738985254754103239606734704833807524034792322022334088972390560749780278716276367288285547038532054571751162765300303447149722547360372709758866304213824352340432310350857718515406136814665647438858394736174463808379052462398238765452942248905254612198670702227852053668062335100695298682915926198743723963477953484561961416928118694212972336975821169100363124337920719319942872013440416946829272294033585130323069561009882570223911135171311912504622239037489351689487233124332993151783950958079669829448487948975403497155754259303918905603336514983266050316438665606746061050105864668839620692673");
     private static final BigInteger PUB_EXP = new BigInteger("65537");
     // @Checkstyle:on
 
     /**
-     * Represents the following claims, encrypted and then signed with 'HelloWorld' Hmac SHA-256.
+     * Represents the following claims, encrypted with RSA1_5 (as issued before the switch to RSA-OAEP-256)
+     * and then signed with 'HelloWorld' Hmac SHA-256.
      * {
      *     "a-value" : "ForgeRock OpenIG"
      * }
      */
     // @Checkstyle:off
-    private static final String ORIGINAL = "eyAidHlwIjogIkpXRSIsICJhbGciOiAiSFMyNTYiIH0."
-            + "ZXlBaWRIbHdJam9nSWtwWFZDSXNJQ0psYm1NaU9pQWlRVEV5T0VOQ1F5MUlVekkxTmlJc0lDSmhiR2NpT2lBaVVsTkJNVjgxSWlCOS5WaXdJczk4alY2LWtLWHVzbXRYOEROYkdONnZRVEZkWlN4Y2gtSTdPRnVobGk5dHFxLUtuUGdrQjJLcS1GejRkSFN5YlRna3BPaC12UGFicEZIYWFNdy5VM2xGS3JXdXhwOGRVSy12ei1oNU13LmFCMEx4blhmRUg2WHZYRFFlSzFVSnpkUW0xUGo2Z0NyY1ZmVGhXRzBIUFp3XzVMQ2hfQlp4QjBhODRXM21rS3AuOV9jT2hUcERSV0FsX0Q1OGpjd0F6QQ."
-            + "_RXMPsV7llUphwscriRlklsVas-ucYxL6QzTFttswwM";
+    private static final String ORIGINAL = "eyJ0eXAiOiJKV1QiLCJjdHkiOiJKV1QiLCJhbGciOiJIUzI1NiJ9."
+            + "ZXlKMGVYQWlPaUpLVjFRaUxDSmxibU1pT2lKQk1USTRRMEpETFVoVE1qVTJJaXdpWVd4bklqb2lVbE5CTVY4MUluMC5WT0hUQjUzNC1NOFRhbEI5V2I2c2ptc1FxUHlEMlFjdWVWa0ZHdl83QzBud0Y5WGpFQW9LQ0FfQXh3akdWVERVRnU5aFowYjRtbnJDV2EzTEhSdmNuekRzcWV5SVlBRDAtQ3pkbnN0ZWs4b3UzaEVVRF9zTHNnalF0OFduRjJOQlRHeUJBcjc2bGUzdloxVjhpZFFrajNPSkdic3FQQjQxWTAydlZHTGNjQm5FeGZ1bUd3bXNQb3pRTmdUNVZxcmptUGttN0Y1RVcyTFpPczVNdGFlU2NwQnlKX2lWNUdoY1ZIQmsya3VRMEwxS2RvNEhYY1RmVjNFbHRfTk11NGtobk9QbGN0YUJOR0FFS2EyeEtqa1hxdWJZVHlqYXZGamxzVjc5bEVtVEl2YXk0bnVuSXZIemRCTDBmSXQxbk1PZVVqOTZGNjVOMngyaEJmVnNGZGZDN3cuUjNQS1ZRaHJCdEJZcFdSbnp5VzBldy5hREsya2k1VXc5bjg0Um4yUHhCZnc0aEZONUZZWF95b3RuUDVSRWpkSDFzLml3cTVNY2RXR2VRZTQxdk9WNlBnalE."
+            + "zL0oiiCuHbqRfRiH2Z5lrVdxXD3dcbj7VYRCEElRJ9M";
     // @Checkstyle:on
 
     /**
@@ -140,6 +145,11 @@ public class JwtCookieSessionTest {
 
         JwtClaimsSet claimsSet = decryptClaimsSet(cookie.getValue());
         assertThat(claimsSet.get("a-value").asString()).isEqualTo("ForgeRock OpenIG");
+
+        // The signed JWT's payload is the nested (encrypted) JWT
+        String nestedJwe = new String(Base64url.decode(cookie.getValue().split("\\.")[1]), StandardCharsets.UTF_8);
+        EncryptedJwt jwe = new JwtBuilderFactory().reconstruct(nestedJwe, EncryptedJwt.class);
+        assertThat(jwe.getHeader().getAlgorithm()).isEqualTo(JweAlgorithm.RSA_OAEP_256);
     }
 
     @Test
@@ -346,7 +356,7 @@ public class JwtCookieSessionTest {
                 TimeService.SYSTEM,
                 duration(DEFAULT_SESSION_TIMEOUT),
                 SIGNING_HANDLER);
-        session.put("in-between-3KB-and-4KB", generateMessageOf(2000));
+        session.put("in-between-3KB-and-4KB", generateMessageOf(1600));
         session.save(new Response(Status.OK));
     }
 

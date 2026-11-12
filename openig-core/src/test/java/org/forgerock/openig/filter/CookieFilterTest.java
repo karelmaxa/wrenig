@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2014-2016 ForgeRock AS.
- * Portions Copyright 2023 Wren Security.
+ * Portions Copyright 2023-2026 Wren Security.
  */
 
 package org.forgerock.openig.filter;
@@ -86,7 +86,7 @@ public class CookieFilterTest {
                         // Expecting to find the managed cookie, not the original one
                         // CookieFilter produces a single 'Cookie' value
                         assertThat(request.getHeaders().getFirst(CookieHeader.NAME))
-                                .contains("Test-Managed=\"Overridden value\"");
+                                .contains("Test-Managed=\"Overridden-value\"");
 
                         // request.cookies is not in sync with the message's headers' content
                         // Cannot assert on request.cookies due to OPENIG-123
@@ -100,7 +100,7 @@ public class CookieFilterTest {
         CookieManager manager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
         manager.getCookieStore()
                .add(request.getUri().asURI(),
-                    buildCookie("Test-Managed", "Overridden value"));
+                    buildCookie("Test-Managed", "Overridden-value"));
         session.put(CookieManager.class.getName(), manager);
 
         // Prepare the request with an existing cookie that will be overridden
@@ -220,7 +220,7 @@ public class CookieFilterTest {
                             throws Throwable {
 
                         assertThat(request.getHeaders().getFirst(CookieHeader.NAME))
-                                .contains("Will-Be-Relayed=\"Default Value\"");
+                                .contains("Will-Be-Relayed=DefaultValue");
 
                         return Promises.newResultPromise(new Response(Status.OK));
                     }
@@ -366,7 +366,7 @@ public class CookieFilterTest {
     private void appendRequestCookie(String name, String domain) {
         Cookie cookie = new Cookie();
         cookie.setName(name);
-        cookie.setValue("Default Value");
+        cookie.setValue("DefaultValue");
         cookie.setDomain(domain);
         cookie.setPath("/");
         CookieHeader header = CookieHeader.valueOf(request);

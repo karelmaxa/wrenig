@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2014-2016 ForgeRock AS.
+ * Portions Copyright 2026 Wren Security.
  */
 
 package org.forgerock.openig.jwt;
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Represents an OpenIG {@link Session} that will be stored as an encrypted JSON Web Token in a Cookie.
- * The generated JWT is encrypted with the {@link JweAlgorithm#RSAES_PKCS1_V1_5} algorithm and {@link
+ * The generated JWT is encrypted with the {@link JweAlgorithm#RSA_OAEP_256} algorithm and {@link
  * EncryptionMethod#A128CBC_HS256} method.
  */
 public class JwtCookieSession extends MapDecorator<String, Object> implements Session, DirtyListener {
@@ -345,7 +346,7 @@ public class JwtCookieSession extends MapDecorator<String, Object> implements Se
         claimsBuilder.claims(this);
         return factory.jwe(pair.getPublic())
                       .headers()
-                      .alg(JweAlgorithm.RSAES_PKCS1_V1_5)
+                      .alg(JweAlgorithm.RSA_OAEP_256)
                       .enc(EncryptionMethod.A128CBC_HS256)
                       .done()
                       .claims(claimsBuilder.build())

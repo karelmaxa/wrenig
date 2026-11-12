@@ -12,7 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
- * Portions Copyright 2023 Wren Security.
+ * Portions Copyright 2023-2026 Wren Security.
  */
 
 package org.forgerock.openig.http;
@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.wrensecurity.guava.common.base.Ticker;
@@ -78,8 +77,7 @@ import org.forgerock.util.time.TimeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.models.Info;
-import io.swagger.models.Scheme;
+import io.swagger.v3.oas.models.info.Info;
 
 /**
  * Configuration class for the OpenIG Administration.
@@ -231,8 +229,7 @@ public class AdminHttpApplication implements DescribedHttpApplication {
     public SwaggerApiProducer getApiProducer() {
         return new SwaggerApiProducer(new Info().title(API_TITLE),
                                       addLeadingSlash(adminPrefix),
-                                      null,
-                                      Collections.<Scheme>emptyList());
+                                      null);
     }
 
     /**
